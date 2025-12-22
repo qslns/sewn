@@ -71,8 +71,13 @@ export default function RegisterPage() {
 
     try {
       await signUpWithEmail(email, password, { name, user_type: userType })
-      showToast('success', '회원가입이 완료되었습니다! 이메일을 확인해주세요.')
-      router.push(ROUTES.LOGIN)
+      showToast('success', '회원가입이 완료되었습니다!')
+      // 전문가로 가입하면 온보딩으로, 클라이언트면 대시보드로
+      if (userType === 'expert' || userType === 'both') {
+        router.push(ROUTES.ONBOARDING)
+      } else {
+        router.push(ROUTES.DASHBOARD)
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : '회원가입에 실패했습니다.'
       if (errorMessage.includes('already registered')) {

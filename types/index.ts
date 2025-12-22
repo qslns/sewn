@@ -23,31 +23,54 @@ export type TransactionType = 'escrow_deposit' | 'release_to_expert' | 'refund_t
 // 거래 상태
 export type TransactionStatus = 'pending' | 'completed' | 'failed'
 
-// 전문가 카테고리
+// 전문가 카테고리 (16개)
 export type ExpertCategory =
+  // 테크니컬
   | 'technical_designer'
   | 'pattern_maker'
   | '3d_designer'
+  | 'cad_specialist'
+  // 프로덕션
   | 'sample_maker'
-  | 'model'
-  | 'photographer'
-  | 'stylist'
-  | 'illustrator'
-  | 'graphic_designer'
+  | 'seamstress'
+  | 'knit_specialist'
+  | 'fitting_specialist'
+  // 크리에이티브
+  | 'fashion_designer'
   | 'textile_designer'
+  | 'graphic_designer'
+  | 'illustrator'
+  // 미디어
+  | 'photographer'
+  | 'model'
+  | 'stylist'
+  | 'videographer'
+
+// 카테고리 그룹 타입
+export type ExpertCategoryGroup = 'TECHNICAL' | 'PRODUCTION' | 'CREATIVE' | 'MEDIA'
 
 // 카테고리 라벨 매핑 (한국어)
 export const CATEGORY_LABELS: Record<ExpertCategory, string> = {
+  // 테크니컬
   technical_designer: '테크니컬 디자이너',
   pattern_maker: '패턴 메이커',
   '3d_designer': '3D 디자이너',
+  cad_specialist: 'CAD 전문가',
+  // 프로덕션
   sample_maker: '샘플리스트',
-  model: '모델',
-  photographer: '포토그래퍼',
-  stylist: '스타일리스트',
-  illustrator: '일러스트레이터',
-  graphic_designer: '그래픽 디자이너',
+  seamstress: '봉제사',
+  knit_specialist: '니트 전문가',
+  fitting_specialist: '가봉사',
+  // 크리에이티브
+  fashion_designer: '패션 디자이너',
   textile_designer: '텍스타일 디자이너',
+  graphic_designer: '그래픽 디자이너',
+  illustrator: '일러스트레이터',
+  // 미디어
+  photographer: '포토그래퍼',
+  model: '모델',
+  stylist: '스타일리스트',
+  videographer: '비디오그래퍼',
 }
 
 // ===========================

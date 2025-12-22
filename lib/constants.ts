@@ -27,18 +27,48 @@ export const FILE_UPLOAD = {
   ALLOWED_DOCUMENT_TYPES: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
 } as const
 
-// 전문가 카테고리 목록
-export const EXPERT_CATEGORIES: { value: ExpertCategory; label: string; description: string }[] = [
-  { value: 'technical_designer', label: '테크니컬 디자이너', description: '기술적 디테일과 스펙 관리' },
-  { value: 'pattern_maker', label: '패턴 메이커', description: '의류 패턴 설계 및 제작' },
-  { value: '3d_designer', label: '3D 디자이너', description: 'CLO3D, Browzwear 등 3D 디자인' },
-  { value: 'sample_maker', label: '샘플리스트', description: '샘플 의류 제작 전문' },
-  { value: 'model', label: '모델', description: '룩북 및 커머셜 모델' },
-  { value: 'photographer', label: '포토그래퍼', description: '패션 사진 촬영' },
-  { value: 'stylist', label: '스타일리스트', description: '패션 스타일링 및 코디네이션' },
-  { value: 'illustrator', label: '일러스트레이터', description: '패션 일러스트레이션' },
-  { value: 'graphic_designer', label: '그래픽 디자이너', description: '브랜딩 및 그래픽 작업' },
-  { value: 'textile_designer', label: '텍스타일 디자이너', description: '원단 및 패턴 디자인' },
+// 전문가 카테고리 그룹
+export const EXPERT_CATEGORY_GROUPS = {
+  TECHNICAL: {
+    label: '테크니컬',
+    categories: ['technical_designer', 'pattern_maker', '3d_designer', 'cad_specialist'],
+  },
+  PRODUCTION: {
+    label: '프로덕션',
+    categories: ['sample_maker', 'seamstress', 'knit_specialist', 'fitting_specialist'],
+  },
+  CREATIVE: {
+    label: '크리에이티브',
+    categories: ['fashion_designer', 'textile_designer', 'graphic_designer', 'illustrator'],
+  },
+  MEDIA: {
+    label: '미디어',
+    categories: ['photographer', 'model', 'stylist', 'videographer'],
+  },
+} as const
+
+// 전문가 카테고리 목록 (16개 전체)
+export const EXPERT_CATEGORIES: { value: ExpertCategory; label: string; description: string; group: string }[] = [
+  // 테크니컬
+  { value: 'technical_designer', label: '테크니컬 디자이너', description: '기술적 디테일, 스펙 시트, 생산 지시서 관리', group: 'TECHNICAL' },
+  { value: 'pattern_maker', label: '패턴 메이커', description: '의류 패턴 설계 및 제작, 그레이딩', group: 'TECHNICAL' },
+  { value: '3d_designer', label: '3D 디자이너', description: 'CLO3D, Browzwear, Marvelous Designer 전문', group: 'TECHNICAL' },
+  { value: 'cad_specialist', label: 'CAD 전문가', description: 'Gerber, Optitex, Lectra 등 CAD 시스템 전문', group: 'TECHNICAL' },
+  // 프로덕션
+  { value: 'sample_maker', label: '샘플리스트', description: '샘플 의류 제작, 프로토타입 개발', group: 'PRODUCTION' },
+  { value: 'seamstress', label: '봉제사', description: '전문 봉제, 완봉, 특수 봉제 기술', group: 'PRODUCTION' },
+  { value: 'knit_specialist', label: '니트 전문가', description: '니트웨어 전문 제작 및 개발', group: 'PRODUCTION' },
+  { value: 'fitting_specialist', label: '가봉사', description: '가봉 및 피팅 보정 전문', group: 'PRODUCTION' },
+  // 크리에이티브
+  { value: 'fashion_designer', label: '패션 디자이너', description: '의류 디자인, 컬렉션 개발', group: 'CREATIVE' },
+  { value: 'textile_designer', label: '텍스타일 디자이너', description: '원단 디자인, 프린트 패턴 개발', group: 'CREATIVE' },
+  { value: 'graphic_designer', label: '그래픽 디자이너', description: '브랜딩, 로고, 마케팅 그래픽', group: 'CREATIVE' },
+  { value: 'illustrator', label: '일러스트레이터', description: '패션 일러스트레이션, 도식화', group: 'CREATIVE' },
+  // 미디어
+  { value: 'photographer', label: '포토그래퍼', description: '패션 사진, 룩북, 캠페인 촬영', group: 'MEDIA' },
+  { value: 'model', label: '모델', description: '룩북, 커머셜, 피팅 모델', group: 'MEDIA' },
+  { value: 'stylist', label: '스타일리스트', description: '패션 스타일링, 코디네이션', group: 'MEDIA' },
+  { value: 'videographer', label: '비디오그래퍼', description: '패션 영상, 캠페인 비디오 제작', group: 'MEDIA' },
 ]
 
 // 스킬 목록 (자동완성용)
@@ -132,15 +162,20 @@ export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   REGISTER: '/register',
+  ONBOARDING: '/onboarding',
+  AUTH_CALLBACK: '/auth/callback',
   EXPERTS: '/experts',
   EXPERT_DETAIL: (id: string) => `/experts/${id}`,
   PROJECTS: '/projects',
   PROJECT_DETAIL: (id: string) => `/projects/${id}`,
   PROJECT_NEW: '/projects/new',
   MESSAGES: '/messages',
+  MESSAGE_DETAIL: (id: string) => `/messages/${id}`,
   DASHBOARD: '/dashboard',
   DASHBOARD_PROFILE: '/dashboard/profile',
   DASHBOARD_PORTFOLIO: '/dashboard/portfolio',
+  DASHBOARD_PROJECTS: '/dashboard/projects',
+  DASHBOARD_PROPOSALS: '/dashboard/proposals',
   DASHBOARD_CONTRACTS: '/dashboard/contracts',
   DASHBOARD_SETTINGS: '/dashboard/settings',
 } as const
