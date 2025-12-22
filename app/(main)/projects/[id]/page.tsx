@@ -6,6 +6,7 @@
 
 import { use, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -15,6 +16,8 @@ import { Modal, ModalFooter } from '@/components/ui/modal'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { LoadingState } from '@/components/ui/spinner'
+import { Lightbox } from '@/components/ui/lightbox'
+import { StarRating } from '@/components/ui/star-rating'
 import { useToast } from '@/components/ui/toast'
 import { useProject } from '@/hooks/useProjects'
 import { useAuth } from '@/hooks/useAuth'
@@ -32,6 +35,8 @@ import {
   Send,
   Check,
   X,
+  Image as ImageIcon,
+  ExternalLink,
 } from 'lucide-react'
 import type { ExpertCategory } from '@/types'
 
@@ -55,6 +60,14 @@ export default function ProjectDetailPage({
     estimated_duration: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(0)
+
+  // 첨부 이미지 배열
+  const attachmentImages = (project?.attachment_urls || []).map((url: string, idx: number) => ({
+    url,
+    title: `첨부 이미지 ${idx + 1}`,
+  }))
 
   const isClient = profile?.user_type === 'client' || profile?.user_type === 'both'
   const isExpert = profile?.user_type === 'expert' || profile?.user_type === 'both'
@@ -227,6 +240,38 @@ export default function ProjectDetailPage({
             </div>
           </section>
 
+          {/* 첨부 파일 */}
+          {project.attachment_urls && project.attachment_urls.length > 0 && (
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                <ImageIcon className="inline h-5 w-5 mr-2" />
+                첨부 파일 ({project.attachment_urls.length})
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {project.attachment_urls.map((url: string, idx: number) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setLightboxIndex(idx)
+                      setLightboxOpen(true)
+                    }}
+                    className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 hover:opacity-90 transition-opacity group"
+                  >
+                    <Image
+                      src={url}
+                      alt={`첨부 이미지 ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <ExternalLink className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* 제안서 목록 (프로젝트 소유자만) */}
           {isOwner && (
             <section>
@@ -246,27 +291,32 @@ export default function ProjectDetailPage({
                     <Card key={proposal.id}>
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
+                          <Link
+                            href={ROUTES.EXPERT_DETAIL(proposal.expert?.id)}
+                            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                          >
                             <Avatar
                               src={proposal.expert?.user?.profile_image_url}
                               alt={proposal.expert?.user?.name || '전문가'}
                               size="md"
                             />
                             <div>
-                              <h3 className="font-medium text-gray-900">
+                              <h3 className="font-medium text-gray-900 hover:text-accent-camel transition-colors">
                                 {proposal.expert?.user?.name}
+                                <ExternalLink className="inline h-3 w-3 ml-1 text-gray-400" />
                               </h3>
-                              <div className="flex items-center gap-2 text-sm text-gray-500">
-                                {proposal.expert?.review_count > 0 && (
-                                  <>
-                                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                    {proposal.expert.rating_avg.toFixed(1)}
-                                    <span>({proposal.expert.review_count})</span>
-                                  </>
-                                )}
-                              </div>
+                              {proposal.expert?.review_count > 0 && (
+                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                  <StarRating
+                                    rating={proposal.expert.rating_avg}
+                                    size="sm"
+                                    showValue
+                                  />
+                                  <span className="text-gray-400">({proposal.expert.review_count})</span>
+                                </div>
+                              )}
                             </div>
-                          </div>
+                          </Link>
                           <Badge
                             variant={
                               proposal.status === 'pending'
@@ -280,14 +330,20 @@ export default function ProjectDetailPage({
                           </Badge>
                         </div>
 
-                        <p className="text-gray-600 mb-4">{proposal.cover_letter}</p>
+                        <p className="text-gray-600 mb-4 whitespace-pre-line">{proposal.cover_letter}</p>
 
-                        <div className="flex items-center gap-6 text-sm text-gray-500 mb-4">
-                          <span className="font-medium text-gray-900">
-                            {formatPrice(proposal.proposed_rate)}
-                          </span>
+                        <div className="flex items-center gap-6 text-sm text-gray-500 mb-4 p-3 bg-gray-50 rounded-lg">
+                          <div>
+                            <span className="text-gray-500">제안 금액</span>
+                            <p className="font-semibold text-gray-900 text-lg">
+                              {formatPrice(proposal.proposed_rate)}
+                            </p>
+                          </div>
                           {proposal.estimated_duration && (
-                            <span>예상 기간: {proposal.estimated_duration}</span>
+                            <div className="border-l border-gray-200 pl-6">
+                              <span className="text-gray-500">예상 기간</span>
+                              <p className="font-medium text-gray-900">{proposal.estimated_duration}</p>
+                            </div>
                           )}
                         </div>
 
@@ -308,10 +364,12 @@ export default function ProjectDetailPage({
                               <X className="h-4 w-4 mr-1" />
                               거절
                             </Button>
-                            <Button size="sm" variant="ghost">
-                              <MessageSquare className="h-4 w-4 mr-1" />
-                              메시지
-                            </Button>
+                            <Link href={ROUTES.MESSAGES}>
+                              <Button size="sm" variant="ghost">
+                                <MessageSquare className="h-4 w-4 mr-1" />
+                                메시지
+                              </Button>
+                            </Link>
                           </div>
                         )}
                       </CardContent>
@@ -487,6 +545,14 @@ export default function ProjectDetailPage({
           </ModalFooter>
         </form>
       </Modal>
+
+      {/* 첨부 이미지 라이트박스 */}
+      <Lightbox
+        images={attachmentImages}
+        initialIndex={lightboxIndex}
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   )
 }

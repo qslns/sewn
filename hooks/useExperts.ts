@@ -7,7 +7,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { PAGINATION } from '@/lib/constants'
-import type { ExpertProfile, ExpertFilters, PaginatedResponse } from '@/types'
+import type { ExpertProfile, ExpertFilters, SortOption } from '@/types'
 
 interface UseExpertsOptions {
   filters?: ExpertFilters
@@ -15,8 +15,9 @@ interface UseExpertsOptions {
   limit?: number
 }
 
-type ExpertWithUser = ExpertProfile & {
-  user: { name: string; profile_image_url: string | null }
+export type ExpertWithUser = ExpertProfile & {
+  user: { id: string; name: string; profile_image_url: string | null }
+  portfolio_preview?: string[]
 }
 
 export function useExperts(options: UseExpertsOptions = {}) {
@@ -39,6 +40,7 @@ export function useExperts(options: UseExpertsOptions = {}) {
           `
           *,
           user:users!expert_profiles_user_id_fkey (
+            id,
             name,
             profile_image_url
           )
@@ -69,17 +71,45 @@ export function useExperts(options: UseExpertsOptions = {}) {
         query = query.lte('hourly_rate_max', filters.maxRate)
       }
 
-      // 검색어 필터 (이름 또는 스킬에서 검색)
+      // 최소 평점 필터
+      if (filters.minRating) {
+        query = query.gte('rating_avg', filters.minRating)
+      }
+
+      // 검색어 필터
       if (filters.search) {
         query = query.or(
-          `user.name.ilike.%${filters.search}%,skills.cs.{${filters.search}}`
+          `bio.ilike.%${filters.search}%,skills.cs.{${filters.search}}`
         )
       }
 
-      // 정렬 (평점 높은 순, 리뷰 많은 순)
-      query = query
-        .order('rating_avg', { ascending: false })
-        .order('review_count', { ascending: false })
+      // 정렬
+      const sort = filters.sort || 'recommended'
+      switch (sort) {
+        case 'rating':
+          query = query.order('rating_avg', { ascending: false })
+          break
+        case 'reviews':
+          query = query.order('review_count', { ascending: false })
+          break
+        case 'latest':
+          query = query.order('created_at', { ascending: false })
+          break
+        case 'price_low':
+          query = query.order('hourly_rate_min', { ascending: true, nullsFirst: false })
+          break
+        case 'price_high':
+          query = query.order('hourly_rate_max', { ascending: false, nullsFirst: false })
+          break
+        case 'recommended':
+        default:
+          // 추천순: 평점 * 리뷰수 + 완료 프로젝트 수
+          query = query
+            .order('rating_avg', { ascending: false })
+            .order('review_count', { ascending: false })
+            .order('completed_projects', { ascending: false })
+          break
+      }
 
       // 페이지네이션
       const from = (page - 1) * limit
@@ -90,7 +120,37 @@ export function useExperts(options: UseExpertsOptions = {}) {
 
       if (queryError) throw queryError
 
-      setData((experts as ExpertWithUser[]) || [])
+      // 포트폴리오 미리보기 가져오기
+      const expertIds = (experts || []).map((e) => e.id)
+      let portfolioMap: Record<string, string[]> = {}
+
+      if (expertIds.length > 0) {
+        const { data: portfolios } = await supabase
+          .from('portfolio_items')
+          .select('expert_id, image_urls')
+          .in('expert_id', expertIds)
+          .order('created_at', { ascending: false })
+
+        if (portfolios) {
+          portfolioMap = portfolios.reduce((acc, item) => {
+            if (!acc[item.expert_id]) {
+              acc[item.expert_id] = []
+            }
+            if (item.image_urls && item.image_urls.length > 0) {
+              acc[item.expert_id].push(item.image_urls[0])
+            }
+            return acc
+          }, {} as Record<string, string[]>)
+        }
+      }
+
+      // 전문가 데이터에 포트폴리오 미리보기 추가
+      const expertsWithPortfolio = (experts || []).map((expert) => ({
+        ...expert,
+        portfolio_preview: portfolioMap[expert.id]?.slice(0, 3) || [],
+      })) as ExpertWithUser[]
+
+      setData(expertsWithPortfolio)
       setCount(totalCount || 0)
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch experts'))
@@ -122,8 +182,12 @@ export function useExpert(id: string) {
   const supabase = getSupabaseClient()
   const [data, setData] = useState<ExpertWithUser | null>(null)
   const [portfolioItems, setPortfolioItems] = useState<
-    { id: string; title: string; image_urls: string[]; description: string | null }[]
+    { id: string; title: string; image_urls: string[]; description: string | null; category: string | null }[]
   >([])
+  const [reviews, setReviews] = useState<
+    { id: string; rating: number; comment: string | null; created_at: string; reviewer: { name: string; profile_image_url: string | null } }[]
+  >([])
+  const [similarExperts, setSimilarExperts] = useState<ExpertWithUser[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
@@ -157,13 +221,56 @@ export function useExpert(id: string) {
         // 포트폴리오 조회
         const { data: portfolio, error: portfolioError } = await supabase
           .from('portfolio_items')
-          .select('id, title, image_urls, description')
+          .select('id, title, image_urls, description, category')
           .eq('expert_id', id)
           .order('created_at', { ascending: false })
 
         if (portfolioError) throw portfolioError
 
         setPortfolioItems(portfolio || [])
+
+        // 리뷰 조회
+        const { data: reviewData } = await supabase
+          .from('reviews')
+          .select(`
+            id,
+            rating,
+            comment,
+            created_at,
+            reviewer:users!reviews_reviewer_id_fkey (
+              name,
+              profile_image_url
+            )
+          `)
+          .eq('reviewee_id', expert.user_id)
+          .order('created_at', { ascending: false })
+          .limit(10)
+
+        if (reviewData) {
+          setReviews(reviewData as unknown as typeof reviews)
+        }
+
+        // 유사 전문가 조회 (같은 카테고리)
+        if (expert.categories && expert.categories.length > 0) {
+          const { data: similar } = await supabase
+            .from('expert_profiles')
+            .select(`
+              *,
+              user:users!expert_profiles_user_id_fkey (
+                id,
+                name,
+                profile_image_url
+              )
+            `)
+            .neq('id', id)
+            .contains('categories', [expert.categories[0]])
+            .order('rating_avg', { ascending: false })
+            .limit(4)
+
+          if (similar) {
+            setSimilarExperts(similar as ExpertWithUser[])
+          }
+        }
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to fetch expert'))
       } finally {
@@ -176,5 +283,5 @@ export function useExpert(id: string) {
     }
   }, [supabase, id])
 
-  return { data, portfolioItems, isLoading, error }
+  return { data, portfolioItems, reviews, similarExperts, isLoading, error }
 }

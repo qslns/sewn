@@ -299,6 +299,18 @@ export interface ReviewFormData {
 // 필터 타입
 // ===========================
 
+// 정렬 옵션
+export type SortOption = 'recommended' | 'rating' | 'reviews' | 'latest' | 'price_low' | 'price_high'
+
+export const SORT_LABELS: Record<SortOption, string> = {
+  recommended: '추천순',
+  rating: '평점순',
+  reviews: '리뷰 많은순',
+  latest: '최신순',
+  price_low: '가격 낮은순',
+  price_high: '가격 높은순',
+}
+
 export interface ExpertFilters {
   categories?: ExpertCategory[]
   minRate?: number
@@ -306,6 +318,8 @@ export interface ExpertFilters {
   location?: string
   availability?: AvailabilityStatus
   search?: string
+  sort?: SortOption
+  minRating?: number
 }
 
 export interface ProjectFilters {
