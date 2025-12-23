@@ -10,8 +10,9 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar } from '@/components/ui/avatar'
+import { NotificationDropdown } from '@/components/notifications/notification-dropdown'
 import { ROUTES } from '@/lib/constants'
-import { Menu, X, MessageSquare, Bell, ChevronDown } from 'lucide-react'
+import { Menu, X, MessageSquare, ChevronDown, User, Settings, LogOut, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 const navigation = [
@@ -69,9 +70,7 @@ export function Header() {
                 </Link>
 
                 {/* 알림 */}
-                <button className="p-2 text-gray-500 hover:text-black transition-colors">
-                  <Bell className="h-5 w-5" />
-                </button>
+                <NotificationDropdown userId={user.id} />
 
                 {/* 사용자 메뉴 */}
                 <div className="relative">
@@ -104,23 +103,26 @@ export function Header() {
                         </div>
                         <Link
                           href={ROUTES.DASHBOARD}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                           onClick={() => setUserMenuOpen(false)}
                         >
+                          <LayoutDashboard className="h-4 w-4" />
                           대시보드
                         </Link>
                         <Link
                           href={ROUTES.DASHBOARD_PROFILE}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                           onClick={() => setUserMenuOpen(false)}
                         >
+                          <User className="h-4 w-4" />
                           프로필 편집
                         </Link>
                         <Link
                           href={ROUTES.DASHBOARD_SETTINGS}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                           onClick={() => setUserMenuOpen(false)}
                         >
+                          <Settings className="h-4 w-4" />
                           설정
                         </Link>
                         <div className="border-t border-gray-100 mt-1 pt-1">
@@ -129,8 +131,9 @@ export function Header() {
                               setUserMenuOpen(false)
                               signOut()
                             }}
-                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
+                            className="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
                           >
+                            <LogOut className="h-4 w-4" />
                             로그아웃
                           </button>
                         </div>

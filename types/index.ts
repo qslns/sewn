@@ -194,12 +194,16 @@ export interface Conversation {
   participant_ids: string[]
   project_id: string | null
   last_message_at: string | null
+  last_message_preview: string | null
+  unread_count: Record<string, number>
   created_at: string
   // 조인된 데이터
   participants?: User[]
   project?: Project
   last_message?: Message
 }
+
+export type MessageType = 'text' | 'image' | 'file'
 
 export interface Message {
   id: string
@@ -208,9 +212,26 @@ export interface Message {
   content: string
   attachment_urls: string[]
   is_read: boolean
+  message_type: MessageType
+  file_url: string | null
+  file_name: string | null
   created_at: string
   // 조인된 데이터
   sender?: User
+}
+
+export type NotificationType = 'message' | 'proposal_received' | 'proposal_accepted' | 'proposal_rejected' | 'project_update'
+
+export interface Notification {
+  id: string
+  user_id: string
+  type: NotificationType
+  title: string
+  content: string | null
+  link: string | null
+  related_id: string | null
+  is_read: boolean
+  created_at: string
 }
 
 export interface Review {

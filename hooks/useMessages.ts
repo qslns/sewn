@@ -6,15 +6,23 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { getSupabaseClient } from '@/lib/supabase/client'
-import type { Conversation, Message } from '@/types'
+import type { Conversation, Message, MessageType } from '@/types'
 
 type ConversationWithDetails = Conversation & {
   participants: { id: string; name: string; profile_image_url: string | null }[]
   last_message?: { content: string; created_at: string }
+  unread_count?: Record<string, number>
 }
 
 type MessageWithSender = Omit<Message, 'sender'> & {
   sender: { name: string; profile_image_url: string | null }
+}
+
+interface SendMessageOptions {
+  content: string
+  messageType?: MessageType
+  fileUrl?: string
+  fileName?: string
 }
 
 // 대화 목록 훅
@@ -196,13 +204,22 @@ export function useMessages(conversationId: string | null, userId: string | null
   }, [supabase, conversationId])
 
   // 메시지 전송 함수
-  const sendMessage = async (content: string) => {
-    if (!conversationId || !userId || !content.trim()) return
+  const sendMessage = async (options: string | SendMessageOptions) => {
+    if (!conversationId || !userId) return
+
+    const messageData = typeof options === 'string'
+      ? { content: options, messageType: 'text' as MessageType }
+      : options
+
+    if (!messageData.content.trim() && messageData.messageType === 'text') return
 
     const { error } = await supabase.from('messages').insert({
       conversation_id: conversationId,
       sender_id: userId,
-      content: content.trim(),
+      content: messageData.content.trim(),
+      message_type: messageData.messageType || 'text',
+      file_url: messageData.fileUrl || null,
+      file_name: messageData.fileName || null,
     })
 
     if (error) {
@@ -217,7 +234,25 @@ export function useMessages(conversationId: string | null, userId: string | null
       .eq('id', conversationId)
   }
 
-  return { messages, isLoading, sendMessage, refetch: fetchMessages }
+  // 이미지 업로드 함수
+  const uploadImage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${userId}/${Date.now()}.${fileExt}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('message-attachments')
+      .upload(fileName, file)
+
+    if (uploadError) throw uploadError
+
+    const { data: urlData } = supabase.storage
+      .from('message-attachments')
+      .getPublicUrl(fileName)
+
+    return urlData.publicUrl
+  }
+
+  return { messages, isLoading, sendMessage, uploadImage, refetch: fetchMessages }
 }
 
 // 새 대화 시작

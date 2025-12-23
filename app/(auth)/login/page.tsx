@@ -87,24 +87,22 @@ export default function LoginPage() {
 
       {/* 소셜 로그인 */}
       <div className="space-y-3 mb-6">
-        <Button
+        <button
           type="button"
-          variant="outline"
-          className="w-full"
           onClick={() => handleSocialLogin('kakao')}
+          className="w-full flex items-center justify-center gap-3 bg-[#FEE500] text-[#191919] font-medium py-3 px-4 rounded-lg hover:bg-[#FDD800] transition-colors"
         >
-          <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.636 1.73 4.975 4.348 6.322-.19.706-.686 2.557-.785 2.959-.123.502.184.495.387.36.16-.106 2.547-1.732 3.578-2.434.477.066.965.102 1.472.102 5.523 0 10-3.463 10-7.309C21 6.463 17.523 3 12 3z" />
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 3C6.48 3 2 6.58 2 11c0 2.84 1.87 5.33 4.68 6.74l-.95 3.56c-.05.19.02.39.18.5.08.05.17.08.27.08.1 0 .19-.03.27-.08l4.13-2.74c.47.05.95.08 1.42.08 5.52 0 10-3.58 10-8s-4.48-8-10-8z" />
           </svg>
-          카카오로 계속하기
-        </Button>
-        <Button
+          카카오로 시작하기
+        </button>
+        <button
           type="button"
-          variant="outline"
-          className="w-full"
           onClick={() => handleSocialLogin('google')}
+          className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 font-medium py-3 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
         >
-          <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -122,8 +120,8 @@ export default function LoginPage() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          구글로 계속하기
-        </Button>
+          Google로 시작하기
+        </button>
       </div>
 
       {/* 구분선 */}

@@ -4,7 +4,7 @@
 // 프로젝트 상세 페이지
 // ===========================
 
-import { use, useState } from 'react'
+import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -38,7 +38,7 @@ import {
   Image as ImageIcon,
   ExternalLink,
 } from 'lucide-react'
-import type { ExpertCategory } from '@/types'
+import type { ExpertCategory, PortfolioItem } from '@/types'
 
 export default function ProjectDetailPage({
   params,
@@ -62,6 +62,9 @@ export default function ProjectDetailPage({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([])
+  const [selectedPortfolioIds, setSelectedPortfolioIds] = useState<string[]>([])
+  const [isLoadingPortfolio, setIsLoadingPortfolio] = useState(false)
 
   // 첨부 이미지 배열
   const attachmentImages = (project?.attachment_urls || []).map((url: string, idx: number) => ({
@@ -77,6 +80,45 @@ export default function ProjectDetailPage({
   const hasSubmittedProposal = proposals.some(
     (p) => p.expert?.user?.name === profile?.name
   )
+
+  // 포트폴리오 가져오기 (모달 열릴 때)
+  useEffect(() => {
+    const fetchPortfolio = async () => {
+      if (!isProposalModalOpen || !user || !isExpert) return
+
+      setIsLoadingPortfolio(true)
+      try {
+        const { data: expertProfile } = await supabase
+          .from('expert_profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (expertProfile) {
+          const { data: items } = await supabase
+            .from('portfolio_items')
+            .select('*')
+            .eq('expert_id', expertProfile.id)
+            .order('created_at', { ascending: false })
+
+          setPortfolioItems(items || [])
+        }
+      } catch (error) {
+        console.error('Failed to fetch portfolio:', error)
+      } finally {
+        setIsLoadingPortfolio(false)
+      }
+    }
+
+    fetchPortfolio()
+  }, [isProposalModalOpen, user, isExpert, supabase])
+
+  // 포트폴리오 선택 토글
+  const togglePortfolioSelection = (id: string) => {
+    setSelectedPortfolioIds((prev) =>
+      prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
+    )
+  }
 
   const handleSubmitProposal = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -120,6 +162,7 @@ export default function ProjectDetailPage({
         showToast('success', '제안서가 제출되었습니다.')
         setIsProposalModalOpen(false)
         setProposalForm({ cover_letter: '', proposed_rate: '', estimated_duration: '' })
+        setSelectedPortfolioIds([])
         refetch()
       }
     } catch (error) {
@@ -530,6 +573,66 @@ export default function ProjectDetailPage({
             }
             placeholder="예: 2주, 1개월"
           />
+
+          {/* 포트폴리오 첨부 (선택) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              포트폴리오 첨부 (선택)
+            </label>
+            {isLoadingPortfolio ? (
+              <div className="flex items-center justify-center py-4 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-500">포트폴리오 불러오는 중...</span>
+              </div>
+            ) : portfolioItems.length === 0 ? (
+              <div className="text-center py-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-500 mb-2">등록된 포트폴리오가 없습니다</p>
+                <Link
+                  href={ROUTES.DASHBOARD_PROFILE}
+                  className="text-sm text-accent-camel hover:underline"
+                >
+                  포트폴리오 추가하기
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2 bg-gray-50 rounded-lg">
+                {portfolioItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => togglePortfolioSelection(item.id)}
+                    className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                      selectedPortfolioIds.includes(item.id)
+                        ? 'border-accent-camel ring-2 ring-accent-camel/30'
+                        : 'border-transparent hover:border-gray-300'
+                    }`}
+                  >
+                    {item.image_urls?.[0] ? (
+                      <Image
+                        src={item.image_urls[0]}
+                        alt={item.title}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                        <ImageIcon className="h-6 w-6 text-gray-400" />
+                      </div>
+                    )}
+                    {selectedPortfolioIds.includes(item.id) && (
+                      <div className="absolute inset-0 bg-accent-camel/30 flex items-center justify-center">
+                        <Check className="h-6 w-6 text-white" />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+            {selectedPortfolioIds.length > 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                {selectedPortfolioIds.length}개 선택됨
+              </p>
+            )}
+          </div>
 
           <ModalFooter>
             <Button
