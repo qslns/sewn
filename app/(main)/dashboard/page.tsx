@@ -161,19 +161,47 @@ function ExpertDashboard({ userId }: { userId: string }) {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">총 수익</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {formatPrice(stats.totalEarnings)}
-                </p>
+        <Link href={ROUTES.DASHBOARD_EARNINGS}>
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">총 수익</p>
+                  <p className="text-2xl font-bold text-accent-camel">
+                    {formatPrice(stats.totalEarnings)}
+                  </p>
+                </div>
+                <DollarSign className="h-8 w-8 text-accent-camel/30" />
               </div>
-              <DollarSign className="h-8 w-8 text-gray-300" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* 계약 바로가기 */}
+      <div className="flex gap-4">
+        <Link href={ROUTES.CONTRACTS} className="flex-1">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <FileText className="h-5 w-5 text-gray-400" />
+                <span className="font-medium text-gray-900">계약 관리</span>
+              </div>
+              <ArrowRight className="h-4 w-4 text-gray-400" />
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href={ROUTES.DASHBOARD_EARNINGS} className="flex-1">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer bg-accent-camel/5">
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="h-5 w-5 text-accent-camel" />
+                <span className="font-medium text-gray-900">수익 현황</span>
+              </div>
+              <ArrowRight className="h-4 w-4 text-gray-400" />
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* 평점 카드 */}

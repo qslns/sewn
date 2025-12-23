@@ -152,6 +152,7 @@ export const PROPOSAL_STATUS_LABELS = {
 export const CONTRACT_STATUS_LABELS = {
   pending_payment: '결제 대기',
   in_progress: '진행중',
+  pending_approval: '완료 승인 대기',
   completed: '완료',
   disputed: '분쟁중',
   cancelled: '취소됨',
@@ -171,11 +172,15 @@ export const ROUTES = {
   PROJECT_NEW: '/projects/new',
   MESSAGES: '/messages',
   MESSAGE_DETAIL: (id: string) => `/messages/${id}`,
+  CONTRACTS: '/contracts',
+  CONTRACT_DETAIL: (id: string) => `/contracts/${id}`,
+  PAYMENT: '/payment',
   DASHBOARD: '/dashboard',
   DASHBOARD_PROFILE: '/dashboard/profile',
   DASHBOARD_PORTFOLIO: '/dashboard/portfolio',
   DASHBOARD_PROJECTS: '/dashboard/projects',
   DASHBOARD_PROPOSALS: '/dashboard/proposals',
   DASHBOARD_CONTRACTS: '/dashboard/contracts',
+  DASHBOARD_EARNINGS: '/dashboard/earnings',
   DASHBOARD_SETTINGS: '/dashboard/settings',
 } as const

@@ -15,7 +15,7 @@ export type ProjectStatus = 'draft' | 'open' | 'in_progress' | 'completed' | 'ca
 export type ProposalStatus = 'pending' | 'accepted' | 'rejected' | 'withdrawn'
 
 // 계약 상태
-export type ContractStatus = 'pending_payment' | 'in_progress' | 'completed' | 'disputed' | 'cancelled'
+export type ContractStatus = 'pending_payment' | 'in_progress' | 'pending_approval' | 'completed' | 'disputed' | 'cancelled'
 
 // 거래 유형
 export type TransactionType = 'escrow_deposit' | 'release_to_expert' | 'refund_to_client' | 'platform_fee'
@@ -170,10 +170,27 @@ export interface Contract {
   started_at: string | null
   completed_at: string | null
   created_at: string
+  payment_id: string | null
+  payment_key: string | null
+  proposal_id: string | null
+  deadline: string | null
+  completion_requested_at: string | null
+  // 계산된 금액
+  platform_fee?: number
+  expert_amount?: number
   // 조인된 데이터
   project?: Project
   client?: User
   expert?: User
+  // 뷰에서 가져온 데이터
+  project_title?: string
+  project_description?: string
+  client_name?: string
+  client_email?: string
+  client_image?: string
+  expert_name?: string
+  expert_email?: string
+  expert_image?: string
 }
 
 export interface Transaction {
